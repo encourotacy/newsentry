@@ -5,7 +5,7 @@
 #include <string>
 
 namespace io {
-enum class ROS2Mode : int { auto_aim = 0, small_buff = 1, big_buff = 2};
+enum class ROS2Mode : int { auto_aim = 0, outpost = 1 };
 
 class ArmorIgnoreSubscriber {
    public:

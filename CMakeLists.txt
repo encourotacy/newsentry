@@ -27,6 +27,7 @@ include_directories(
 add_subdirectory(tools)
 add_subdirectory(io)
 add_subdirectory(tasks/auto_aim)
+add_subdirectory(tasks/auto_outpost)
 # add_subdirectory(tasks/auto_buff)
 
 ####################src###################
@@ -46,7 +47,7 @@ if(TARGET io_ros2_gimbal)
         get_filename_component(OVSENTRY_TARGET ${OVSENTRY_SOURCE} NAME_WE)
         add_executable(${OVSENTRY_TARGET} ${OVSENTRY_SOURCE})
         target_link_libraries(${OVSENTRY_TARGET} 
-            ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim tools io_ros2_gimbal)
+            ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim auto_outpost tools io_ros2_gimbal)
     endforeach()
 else()
     message(STATUS "io_ros2_gimbal target unavailable, skipping ovsentry_* targets.")

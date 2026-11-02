@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     /* === 创建各种类 === */
-    tools::logger()->info("[OVSentry MPC Debug] auto aim = mpc, buff aim = arm-only");
+    tools::logger()->info("[OVSentry MPC Debug] auto aim = mpc");
     tools::Plotter plotter;    // 曲线绘图类，发送 data 以供显示调试数据曲线
     tools::Exiter exiter;      // 退出检测器，检测到Ctrl+C则会修改一个标记以表示需要退出
     tools::Recorder recorder;  // 内录，记录画面与四元数以便之后回放
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     auto_aim::Planner planner(config_path);
 
     /* === 主程序 === */
-    tools::logger()->info("[OVSentry Standard MPC] started");
+    tools::logger()->info("[OVSentry Omni MPC] started");
 
     cv::Mat img;
     std::chrono::steady_clock::time_point timestamp;
@@ -64,11 +64,11 @@ int main(int argc, char* argv[]) {
         try {
             camera.read(img, timestamp);
             if (img.empty()) {
-                tools::logger()->warn("[OVSentry Standard MPC] 读取到空图像，跳过此帧");
+                tools::logger()->warn("[OVSentry Omni MPC] 读取到空图像，跳过此帧");
                 continue;
             }
         } catch (const std::exception& e) {
-            tools::logger()->error("[OVSentry Standard MPC] 读取摄像机图像失败: {}", e.what());
+            tools::logger()->error("[OVSentry Omni MPC] 读取摄像机图像失败: {}", e.what());
             continue;
         }
         frame_count++;
@@ -76,14 +76,14 @@ int main(int argc, char* argv[]) {
         //--- 读取 IMU 四元数 ---
         const auto q = gimbal.q_at(timestamp);
         aim_solver.set_R_gimbal2world(q);
-        // buff_solver.set_R_gimbal2world(q);
+        // outpost_solver.set_R_gimbal2world(q);
 
         // recorder.record(img, q, timestamp);  // 如果需要取消内录，将这行注释掉即可
 
         //--- 解析模式 ---
         const auto mode = gimbal_mode.mode();
         if (mode != last_mode) {
-            tools::logger()->info("[OVSentry Standard MPC] switch mode={}", gimbal_mode.mode_name());
+            tools::logger()->info("[OVSentry Omni MPC] switch mode={}", gimbal_mode.mode_name());
             last_mode = mode;
         }
 
@@ -172,12 +172,12 @@ int main(int argc, char* argv[]) {
                 data["armor_name_num"] = command.armor_name_num;
             }
 
-        } else if (mode == io::ROS2Mode::small_buff || mode == io::ROS2Mode::big_buff) {
+        } else if (mode == io::ROS2Mode::outpost) {
             gimbal.send(false, false, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0);
             //--- 调试画图 ---
-            chain_name = "auto_buff";
+            chain_name = "outpost";
         } else {
             chain_name = "unknow";
             gimbal.send(false, false, 0.0, 0.0, 0.0, 
@@ -206,7 +206,7 @@ int main(int argc, char* argv[]) {
         tools::draw_text(img, fmt::format("[{}]", tracker.state()), {10, 120}, {0, 255, 0});
 
         plotter.plot(data);
-        cv::imshow("OVSentry Standard MPC Debug", img);
+        cv::imshow("OVSentry Omni MPC Debug", img);
         auto key = cv::waitKey(1);
         if (key == 'q' || key == 'Q') break;
     }

@@ -28,7 +28,7 @@ ArmorIgnoreSubscriber::ArmorIgnoreSubscriber(const std::string& config_path) {
 StateSubscriber::StateSubscriber(const std::string& config_path) {
     auto yaml = tools::load(config_path);
     auto subscribe = yaml["ros2_gimbal"]["subscribe"];
-    auto topic = tools::read<std::string>(subscribe, "request_buff_topic");
+    auto topic = tools::read<std::string>(subscribe, "request_topic");
 
     impl_ = std::make_unique<StateSubscriber::Impl>(topic);
 }
@@ -150,10 +150,8 @@ class StateSubscriber::Impl {
         switch (mode_) {
             case ROS2Mode::auto_aim:
                 return "auto_aim";
-            case ROS2Mode::small_buff:
-                return "small_buff";
-            case ROS2Mode::big_buff:
-                return "big_buff";
+            case ROS2Mode::outpost:
+                return "outpost";
         }
         return "unknown";
     }
@@ -166,10 +164,7 @@ class StateSubscriber::Impl {
                 mode = ROS2Mode::auto_aim;
                 break;
             case 1:
-                mode = ROS2Mode::small_buff;
-                break;
-            case 2:
-                mode = ROS2Mode::big_buff;
+                mode = ROS2Mode::outpost;
                 break;
             default:
                 tools::logger()->warn("[StateRequest] ignore State={}", message->data);
