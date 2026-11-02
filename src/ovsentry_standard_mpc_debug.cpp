@@ -22,8 +22,8 @@
 #include "tools/recorder.hpp"
 
 const std::string cli_keys =
-    "{help h usage ? |                           | 输出命令行参数说明}"
-    "{@config-path   | configs/standard3.yaml   | 位置参数，yaml配置文件路径 }";
+    "{help h usage ? |                     | 输出命令行参数说明}"
+    "{@config-path   | configs/sentry.yaml | 位置参数，yaml配置文件路径 }";
 
 int main(int argc, char* argv[]) {
     cv::CommandLineParser cli(argc, argv, cli_keys);
@@ -34,8 +34,8 @@ int main(int argc, char* argv[]) {
     }
     /* === 创建各种类 === */
     tools::logger()->info("[OVSentry MPC Debug] auto aim = mpc, buff aim = arm-only");
-    tools::Plotter plotter;  // 曲线绘图类，发送 data 以供显示调试数据曲线
-    tools::Exiter exiter;  // 退出检测器，检测到Ctrl+C则会修改一个标记以表示需要退出
+    tools::Plotter plotter;    // 曲线绘图类，发送 data 以供显示调试数据曲线
+    tools::Exiter exiter;      // 退出检测器，检测到Ctrl+C则会修改一个标记以表示需要退出
     tools::Recorder recorder;  // 内录，记录画面与四元数以便之后回放
     nlohmann::json data;       // 数据记录用
 

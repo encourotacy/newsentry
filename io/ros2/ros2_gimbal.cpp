@@ -71,7 +71,7 @@ ROS2Gimbal::ROS2Gimbal(const std::string& config_path) {
         self_initialized_ = true;
     }
 
-    //--- 创建ROS2通信用变量 ---
+    //--- 创建ROS2通信变量 ---
     node_ = std::make_shared<rclcpp::Node>(node_name_);
     cmd_publisher_ =
         node_->create_publisher<rm_interfaces::msg::GimbalCmd>(cmd_topic_, rclcpp::SensorDataQoS());
