@@ -33,6 +33,7 @@ class ROS2Gimbal {
     // 数据访问
     Eigen::Quaterniond q_at(
         std::chrono::steady_clock::time_point image_timestamp); ///< 返回这个时间的IMU四元数
+    bool has_imu() const;                                       ///< 是否已收到云台状态话题
     double bullet_speed() const;                                ///< 返回弹速
     ROS2GimbalState state() const;
 
@@ -71,16 +72,14 @@ class ROS2Gimbal {
     IMUData latest_data_;
     bool has_prev_{false};
 
-    // 读取来自电控的数据
+    // 从 /serial/gimbal_status 收到的最新云台状态
     std::atomic<bool> is_receiving_data_{false};
-    uint8_t mode_byte_{0};
     double yaw_ = 0.0;
     double pitch_ = 0.0;
     double yaw_vel_ = 0.0;
     double pitch_vel_ = 0.0;
     double bullet_speed_;
     double big_yaw_ = 0.0;
-    uint8_t invincibility_ = 0;  // 读取一个8位二进制，每一位表示一种机器人是否无敌
 
     // 初始化
     void status_callback(const rm_interfaces::msg::Gimbal::SharedPtr msg);  // 数据接收

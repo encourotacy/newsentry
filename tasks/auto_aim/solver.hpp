@@ -18,7 +18,7 @@ class Solver {
     void solve(Armor& armor) const;  // 主程序，计算armor的各种坐标
     std::vector<cv::Point2f> reproject_armor(const Eigen::Vector3d& xyz_in_world, double yaw,
                                              ArmorName name) const;
-    // 重投影，输入装甲板中心，根据之前的解算结果重新计算装甲板角点坐标\
+    // 重投影，输入装甲板中心，根据之前的解算结果重新计算装甲板角点坐标
 
    private:
     // 相机参数

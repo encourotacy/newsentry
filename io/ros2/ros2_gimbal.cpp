@@ -149,6 +149,8 @@ Eigen::Quaterniond ROS2Gimbal::q_at(std::chrono::steady_clock::time_point image_
     return interpolate(data_ahead_, data_behind_);
 }
 
+bool ROS2Gimbal::has_imu() const { return is_receiving_data_.load(); }
+
 double ROS2Gimbal::bullet_speed() const {
     std::lock_guard<std::mutex> lk(mtx_);
     return bullet_speed_;

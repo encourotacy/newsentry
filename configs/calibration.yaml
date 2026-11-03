@@ -14,9 +14,15 @@ exposure_ms: 2
 gain: 16.0
 vid_pid: "2bdf:0001"
 
-#####-----ovgimbal参数-----#####
+#####-----ROS2云台桥参数-----#####
 timing:
-  offset: 0.002
+  offset: 0.002 # s, 云台姿态相对图像的时间补偿
+ros2_gimbal:
+  node_name: "calib_gimbal_bridge"
+  subscribe:
+    status_topic: "/serial/gimbal_status" # 导航转发的云台姿态
+  publish:
+    cmd_topic: "/serial/process_gimbal" # 构造时创建发布器，标定不发送
 
 #####-----标定结果参数-----#####
 # 重投影误差: 0.0913px

@@ -9,7 +9,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "io/camera.hpp"
-#include "io/ovgimbal.hpp"
+#include "io/ros2/ros2_gimbal.hpp"
 #include "tools/math_tools.hpp"
 #include "tools/img_tools.hpp"
 #include "tools/logger.hpp"
@@ -93,7 +93,7 @@ int main(int argc,char* argv[]) {
     const double square_size_mm = tools::read<double>(yaml, "square_size_mm"); // 标定板方格边长
     const double preview_scale = tools::read<double>(yaml, "preview_scale", 0.5); // 图像缩放比例，缩小图像以加快处理速度
     const int detect_interval = tools::read<int>(yaml, "detect_interval", 2); // 检测的间隔帧数
-    io::OVGimbal gimbal(config_path); // 云台类，用于获取imu数据
+    io::ROS2Gimbal gimbal(config_path); // 订阅导航发布的 /serial/gimbal_status
     io::Camera camera(config_path);
     const cv::Size pattern_size(pattern_cols, pattern_rows);
 
@@ -118,7 +118,7 @@ int main(int argc,char* argv[]) {
         camera.read(image, timestamp);
         frame_id++;
 
-        // 读取 imu 发送的四元数
+        // 读取导航转发的云台四元数
         Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
         const bool imu_ready = gimbal.has_imu();
         if (imu_ready) { q = gimbal.q_at(timestamp); }
@@ -136,7 +136,7 @@ int main(int argc,char* argv[]) {
         tools::draw_text(preview, fmt::format("Y {:.2f}", zyx[1]), {40, 80}, {0, 0, 255});
         tools::draw_text(preview, fmt::format("X {:.2f}", zyx[2]), {40, 120}, {0, 0, 255});
         tools::draw_text(
-            preview, imu_ready ? "IMU ready" : "IMU waiting", {40, 160},
+            preview, imu_ready ? "Gimbal ready" : "Gimbal waiting", {40, 160},
             imu_ready ? cv::Scalar(0, 180, 0) : cv::Scalar(0, 0, 255));
         tools::draw_text(
             preview, found ? "Chessboard found" : "Chessboard lost", {40, 200},
