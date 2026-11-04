@@ -23,6 +23,14 @@ const std::vector<cv::Point3f> BASE_ARMOR_POINTS{{0, BASE_ARMOR_WIDTH / 2, LIGHT
                                                  {0, -BASE_ARMOR_WIDTH / 2, -LIGHTBAR_LENGTH / 2},
                                                  {0, BASE_ARMOR_WIDTH / 2, -LIGHTBAR_LENGTH / 2}};
 
+const std::vector<cv::Point3f>& armor_object_points(auto_aim::ArmorName name) {
+    if (name == auto_aim::ArmorName::ONE) return BIG_ARMOR_POINTS;
+    if (name == auto_aim::ArmorName::BASE || name == auto_aim::ArmorName::OUTPOST) {
+        return BASE_ARMOR_POINTS;
+    }
+    return SMALL_ARMOR_POINTS;
+}
+
 }  // namespace
 
 namespace auto_aim {
@@ -55,7 +63,7 @@ void Solver::set_R_gimbal2world(const Eigen::Quaterniond& q) {
 void Solver::solve(Armor& armor) const {
     cv::Vec3d rvec, tvec;
     cv::solvePnP(
-        SMALL_ARMOR_POINTS,  // 1. 世界坐标系中的3D点（单位：米）
+        armor_object_points(armor.name_),  // 1. 装甲板自身坐标系中的3D点（单位：米）
         armor.points_,       // 2. 对应的图像像素坐标（单位：像素）
         camera_matrix_,      // 3. 相机内参矩阵 (3x3)：[fx, 0, cx; 0, fy, cy; 0, 0, 1]
         distort_coeffs_,     // 4. 畸变系数 (k1, k2, p1, p2, k3)
@@ -138,7 +146,7 @@ std::vector<cv::Point2f> Solver::reproject_armor(const Eigen::Vector3d& xyz_in_w
     cv::Vec3d tvec(t_armor2camera[0], t_armor2camera[1], t_armor2camera[2]);
 
     std::vector<cv::Point2f> image_points;
-    cv::projectPoints(SMALL_ARMOR_POINTS, rvec, tvec, camera_matrix_, distort_coeffs_,
+    cv::projectPoints(armor_object_points(name), rvec, tvec, camera_matrix_, distort_coeffs_,
                       image_points);
     return image_points;
 }

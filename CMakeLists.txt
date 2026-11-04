@@ -28,6 +28,7 @@ add_subdirectory(tools)
 add_subdirectory(io)
 add_subdirectory(tasks/auto_aim)
 add_subdirectory(tasks/auto_outpost)
+add_subdirectory(tasks/omniperception)
 # add_subdirectory(tasks/auto_buff)
 
 ####################src###################
@@ -54,7 +55,7 @@ else()
 endif()
 
 ##################calibration################
-file(GLOB CALIBRATION_SOURCES CONFIGURE_DEPENDS calibration/*.cpp)
+file(GLOB CALIBRATION_SOURCES CONFIGURE_DEPENDS calibration/*.cpp calibration_omni/*.cpp)
 foreach(CALIBRATION_SOURCE ${CALIBRATION_SOURCES})
     get_filename_component(CALIBRATION_TARGET ${CALIBRATION_SOURCE} NAME_WE)
     if(CALIBRATION_TARGET STREQUAL "capture_chessboard")

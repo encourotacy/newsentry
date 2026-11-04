@@ -18,19 +18,32 @@ Tracker::Tracker(const std::string &config_path, Solver &solver)
         (tools::read<std::string>(yaml, "enemy_color") == "red") ? Color::RED : Color::BLUE;
 }
 //=== 主程序 ===
-void Tracker::filter(std::list<Armor> &armors, cv::Point2f img_center, size_t invincibility) {
-    // 过滤掉非我方装甲板
+namespace {
+int robot_id(ArmorName name) {
+    switch (name) {
+        case ArmorName::ONE: return 1;
+        case ArmorName::TWO: return 2;
+        case ArmorName::THREE: return 3;
+        case ArmorName::FOUR: return 4;
+        case ArmorName::FIVE: return 5;
+        case ArmorName::SENTRY: return 6;
+        case ArmorName::OUTPOST: return 7;
+        case ArmorName::BASE: return 8;
+        default: return 0;
+    }
+}
+}  // namespace
+
+void Tracker::filter(std::list<Armor> &armors, cv::Point2f img_center, size_t ignore_ids) {
+    // 过滤掉非敌方装甲板
     armors.remove_if([&](const Armor &a) { return a.color_ != enemy_color_; });
 
-    // 过滤无敌单位的装甲板
-    if (invincibility) {
-        for (int i = 0; i < 5; i++) {
-            if (invincibility % 2) {
-                auto filterd_armor = ArmorName(i);
-                armors.remove_if([&](const Armor &a) { return a.name_ == filterd_armor; });
-            }
-            invincibility = invincibility >> 1;
-        }
+    // 导航忽略名单。位定义与 ArmorIgnoreSubscriber 一致：bit0 是 1 号。
+    if (ignore_ids != 0) {
+        armors.remove_if([&](const Armor &a) {
+            const int id = robot_id(a.name_);
+            return id > 0 && id <= 8 && (ignore_ids & (size_t{1} << (id - 1))) != 0;
+        });
     }
 
     // 优先选择靠近图像中心的装甲板

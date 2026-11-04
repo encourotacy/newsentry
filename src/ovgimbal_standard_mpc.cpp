@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
         if (mode == io::AutoAimMode::normal || mode == io::AutoAimMode::anti_top) {
             //--- 自瞄模式，计算自瞄指令 ---
             auto armors = yolo.detect(img, frame_count);
-            tracker.filter(armors, cv::Point2f(img.rows / 2, img.cols / 2), 0);
+            tracker.filter(armors, cv::Point2f(img.cols / 2, img.rows / 2), 0);
 
             auto targets = tracker.track(armors, timestamp);
 

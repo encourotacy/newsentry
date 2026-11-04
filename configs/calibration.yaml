@@ -13,6 +13,7 @@ camera_name: "hikrobot"
 exposure_ms: 2
 gain: 16.0
 vid_pid: "2bdf:0001"
+serial: ""        # 多台海康同时接入时填写主相机序列号；留空则打开枚举到的第一台
 
 #####-----ROS2云台桥参数-----#####
 timing:

@@ -7,6 +7,8 @@ logs/
 manual_output/
 records/
 assets/chessboard_calib/
+assets/chessboard_calib_omni/
+assets/chessboard_calib_omni_extrinsic/
 
-# 辅助文件
-tasks/omniperception_sp
+# # 辅助文件
+# tasks/omniperception_sp

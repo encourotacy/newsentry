@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
         if (mode == io::ROS2Mode::auto_aim) {
             //--- 自瞄模式，计算自瞄指令 ---
             auto armors = yolo.detect(img, frame_count);
-            tracker.filter(armors, cv::Point2f(img.rows / 2, img.cols / 2), 0);
+            tracker.filter(armors, cv::Point2f(img.cols / 2, img.rows / 2), armor_ignore.ignore_ids());
 
             auto targets = tracker.track(armors, timestamp);
 

@@ -16,9 +16,15 @@ namespace io
 class HikRobot : public CameraBase
 {
 public:
-  HikRobot(double exposure_ms, double gain, const std::string & vid_pid);
+  // serial 为空时打开枚举到的第一台，保持主相机的原有行为。
+  // 多台海康同时接入时必须传入序列号，否则几台相机会抢同一台设备。
+  HikRobot(
+    double exposure_ms, double gain, const std::string & vid_pid, const std::string & serial = "");
   ~HikRobot() override;
   void read(cv::Mat & img, std::chrono::steady_clock::time_point & timestamp) override;
+  // 超时返回 false，调用方可以检查退出标志，不会卡在没有画面的相机上。
+  bool try_read(
+    cv::Mat & img, std::chrono::steady_clock::time_point & timestamp, int timeout_ms);
 
 private:
   struct CameraData
@@ -40,6 +46,8 @@ private:
   tools::ThreadSafeQueue<CameraData> queue_;
 
   int vid_, pid_;
+  std::string serial_;
+  std::atomic<bool> device_opened_;
 
   void capture_start();
   void capture_stop();

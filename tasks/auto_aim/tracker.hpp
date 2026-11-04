@@ -16,8 +16,9 @@ class Tracker {
 
     std::string state() const { return state_; };
 
+    // ignore_ids 是导航忽略名单的位掩码，bit0 为 1 号，bit7 为 8 号。0 表示都不忽略。
     void filter(std::list<Armor>& armors, cv::Point2f img_center,
-                size_t invincibility = static_cast<size_t>(0));  // 过滤装甲板
+                size_t ignore_ids = static_cast<size_t>(0));
 
     std::list<Target> track(std::list<Armor>& armors, std::chrono::steady_clock::time_point t);
 

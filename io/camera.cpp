@@ -21,7 +21,9 @@ Camera::Camera(const std::string& config_path) {
     else if (camera_name == "hikrobot") {
         auto gain = tools::read<double>(yaml, "gain");
         auto vid_pid = tools::read<std::string>(yaml, "vid_pid");
-        camera_ = std::make_unique<HikRobot>(exposure_ms, gain, vid_pid);
+        // 只有一台海康时留空即可。多台同时接入后必须填写，避免主相机打开到全向相机。
+        auto serial = tools::read<std::string>(yaml, "serial", std::string(""));
+        camera_ = std::make_unique<HikRobot>(exposure_ms, gain, vid_pid, serial);
     }
 
     else {

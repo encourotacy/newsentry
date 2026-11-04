@@ -2,14 +2,45 @@
 
 #include <libusb-1.0/libusb.h>
 
+#include <cstring>
+#include <mutex>
+
 #include "tools/logger.hpp"
 
 using namespace std::chrono_literals;
 
+namespace
+{
+std::mutex & hikrobot_sdk_mutex()
+{
+  static std::mutex mutex;
+  return mutex;
+}
+
+std::string usb_serial(const MV_CC_DEVICE_INFO * info)
+{
+  if (info == nullptr || info->nTLayerType != MV_USB_DEVICE) return {};
+  const char * text = reinterpret_cast<const char *>(info->SpecialInfo.stUsb3VInfo.chSerialNumber);
+  return std::string(text, strnlen(text, INFO_MAX_BUFFER_SIZE));
+}
+
+}  // namespace
+
 namespace io
 {
-HikRobot::HikRobot(double exposure_ms, double gain, const std::string & vid_pid)
-: exposure_us_(exposure_ms * 1e3), gain_(gain), queue_(1), daemon_quit_(false), vid_(-1), pid_(-1)
+HikRobot::HikRobot(
+  double exposure_ms, double gain, const std::string & vid_pid, const std::string & serial)
+: exposure_us_(exposure_ms * 1e3),
+  gain_(gain),
+  daemon_quit_(false),
+  handle_(nullptr),
+  capturing_(false),
+  capture_quit_(false),
+  queue_(1),
+  vid_(-1),
+  pid_(-1),
+  serial_(serial),
+  device_opened_(false)
 {
   set_vid_pid(vid_pid);
   if (libusb_init(NULL)) tools::logger()->warn("Unable to init libusb!");
@@ -51,10 +82,23 @@ void HikRobot::read(cv::Mat & img, std::chrono::steady_clock::time_point & times
   timestamp = data.timestamp;
 }
 
+bool HikRobot::try_read(
+  cv::Mat & img, std::chrono::steady_clock::time_point & timestamp, int timeout_ms)
+{
+  CameraData data;
+  if (!queue_.pop(data, std::chrono::milliseconds(timeout_ms))) return false;
+
+  img = data.img;
+  timestamp = data.timestamp;
+  return true;
+}
+
 void HikRobot::capture_start()
 {
   capturing_ = false;
   capture_quit_ = false;
+
+  std::lock_guard<std::mutex> sdk_lock(hikrobot_sdk_mutex());
 
   unsigned int ret;
 
@@ -70,17 +114,46 @@ void HikRobot::capture_start()
     return;
   }
 
-  ret = MV_CC_CreateHandle(&handle_, device_list.pDeviceInfo[0]);
+  static std::once_flag logged;
+  std::call_once(logged, [&device_list] {
+    for (unsigned int i = 0; i < device_list.nDeviceNum; ++i) {
+      tools::logger()->info(
+        "[HikRobot] device[{}] serial={}", i, usb_serial(device_list.pDeviceInfo[i]));
+    }
+  });
+
+  MV_CC_DEVICE_INFO * selected = nullptr;
+  if (!serial_.empty()) {
+    for (unsigned int i = 0; i < device_list.nDeviceNum; ++i) {
+      if (usb_serial(device_list.pDeviceInfo[i]) == serial_) {
+        selected = device_list.pDeviceInfo[i];
+        break;
+      }
+    }
+    if (selected == nullptr) {
+      tools::logger()->warn("HikRobot serial \"{}\" not found", serial_);
+      return;
+    }
+  } else {
+    selected = device_list.pDeviceInfo[0];
+  }
+
+  ret = MV_CC_CreateHandle(&handle_, selected);
   if (ret != MV_OK) {
     tools::logger()->warn("MV_CC_CreateHandle failed: {:#x}", ret);
+    handle_ = nullptr;
     return;
   }
 
   ret = MV_CC_OpenDevice(handle_);
   if (ret != MV_OK) {
     tools::logger()->warn("MV_CC_OpenDevice failed: {:#x}", ret);
+    MV_CC_DestroyHandle(handle_);
+    handle_ = nullptr;
     return;
   }
+  device_opened_ = true;
+  tools::logger()->info("HikRobot opened, serial={}", usb_serial(selected));
 
   set_enum_value("BalanceWhiteAuto", MV_BALANCEWHITE_AUTO_CONTINUOUS);
   set_enum_value("ExposureAuto", MV_EXPOSURE_AUTO_MODE_OFF);
@@ -160,6 +233,11 @@ void HikRobot::capture_stop()
   capture_quit_ = true;
   if (capture_thread_.joinable()) capture_thread_.join();
 
+  if (!device_opened_) return;
+
+  std::lock_guard<std::mutex> sdk_lock(hikrobot_sdk_mutex());
+  device_opened_ = false;
+
   unsigned int ret;
 
   ret = MV_CC_StopGrabbing(handle_);
@@ -227,6 +305,41 @@ void HikRobot::set_vid_pid(const std::string & vid_pid)
 void HikRobot::reset_usb() const
 {
   if (vid_ == -1 || pid_ == -1) return;
+
+  // 指定了序列号时只复位这一台。同型号海康的 vid:pid 相同，按 vid:pid 复位会打到别的相机。
+  if (!serial_.empty()) {
+    libusb_device ** devices = nullptr;
+    const ssize_t count = libusb_get_device_list(nullptr, &devices);
+    if (count < 0) {
+      tools::logger()->warn("Unable to list usb devices");
+      return;
+    }
+
+    for (ssize_t i = 0; i < count; ++i) {
+      libusb_device_descriptor desc{};
+      if (libusb_get_device_descriptor(devices[i], &desc) != 0) continue;
+      if (desc.idVendor != vid_ || desc.idProduct != pid_) continue;
+
+      libusb_device_handle * handle = nullptr;
+      if (libusb_open(devices[i], &handle) != 0) continue;
+
+      unsigned char text[256] = {};
+      const int length =
+        libusb_get_string_descriptor_ascii(handle, desc.iSerialNumber, text, sizeof(text));
+      const bool matched = length > 0 && serial_ == reinterpret_cast<char *>(text);
+      if (matched) {
+        if (libusb_reset_device(handle))
+          tools::logger()->warn("Unable to reset usb {}", serial_);
+        else
+          tools::logger()->info("Reset usb successfully: {}", serial_);
+      }
+      libusb_close(handle);
+      if (matched) break;
+    }
+
+    libusb_free_device_list(devices, 1);
+    return;
+  }
 
   // https://github.com/ralight/usb-reset/blob/master/usb-reset.c
   auto handle = libusb_open_device_with_vid_pid(NULL, vid_, pid_);
