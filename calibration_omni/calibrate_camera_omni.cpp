@@ -139,7 +139,6 @@ int main(int argc, char * argv[]) {
     fmt::print("\n==================== 后视相机内参 ====================\n");
     fmt::print("{}\n", result.c_str());
     fmt::print("====================================================\n");
-    fmt::print("请把 camera_matrix 和 distort_coeffs 写入 configs/calibration_omni.yaml\n");
-    fmt::print("然后把标定板放到已知位姿，再运行 calibrate_extrinsic_omni\n");
+    fmt::print("请把 camera_matrix 和 distort_coeffs 写入 configs/sentry.yaml 的后视相机\n");
     return 0;
 }
