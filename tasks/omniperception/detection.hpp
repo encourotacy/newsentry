@@ -14,7 +14,7 @@ struct DetectionResult
 {
   std::list<auto_aim::Armor> armors;
   std::chrono::steady_clock::time_point timestamp;
-  double delta_yaw;    // rad，相对云台正前方
+  double delta_yaw;    // rad，电控系：x 朝后、y 朝右，0 为正后方
   double delta_pitch;  // rad
   std::string camera;
 

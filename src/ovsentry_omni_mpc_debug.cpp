@@ -1,6 +1,7 @@
 #include <fmt/core.h>
 
 #include <chrono>
+#include <cmath>
 #include <opencv2/opencv.hpp>
 #include <optional>
 #include <string>
@@ -14,6 +15,8 @@
 #include "tasks/auto_aim/solver.hpp"
 #include "tasks/auto_aim/tracker.hpp"
 #include "tasks/auto_aim/yolo.hpp"
+#include "tasks/omniperception/decider.hpp"
+#include "tasks/omniperception/perceptron.hpp"
 #include "tools/exiter.hpp"
 #include "tools/img_tools.hpp"
 #include "tools/logger.hpp"
@@ -48,6 +51,8 @@ int main(int argc, char* argv[]) {
     auto_aim::Solver aim_solver(config_path);
     auto_aim::Tracker tracker(config_path, aim_solver);
     auto_aim::Planner planner(config_path);
+    omniperception::Decider decider(config_path);
+    omniperception::Perceptron perceptron(config_path);
 
     /* === 主程序 === */
     tools::logger()->info("[OVSentry Omni MPC] started");
@@ -94,15 +99,41 @@ int main(int argc, char* argv[]) {
 
             auto targets = tracker.track(armors, timestamp);
 
-            std::optional<auto_aim::Target> target_for_plan =
-                targets.empty() ? std::nullopt : std::make_optional(targets.front());
-            command = planner.plan(target_for_plan, gimbal.bullet_speed());
+            if (tracker.state() == "lost") {
+                chain_name = "omni";
+                decider.set_ignore_ids(armor_ignore.ignore_ids());
+                auto detection_queue = perceptron.get_detection_queue();
+                decider.sort(detection_queue);
+                const io::Command omni = decider.decide(detection_queue);
+                command = {};
+                command.control = omni.control;
+                command.shoot = false;
+                if (omni.control) {
+                    command.pitch = 0.26;
+                    // 全向 yaw 是目标相对车尾的角。主相机朝前，大小 yaw 都发这个世界角。
+                    const double aim_yaw =
+                        tools::limit_rad(gimbal.state().big_yaw + omni.yaw + CV_PI);
+                    command.yaw = aim_yaw;
+                    command.big_yaw = aim_yaw;
+                    command.small_yaw = aim_yaw;
+                }
+            } else {
+                chain_name = "auto_aim";
+                std::optional<auto_aim::Target> target_for_plan =
+                    targets.empty() ? std::nullopt : std::make_optional(targets.front());
+                command = planner.plan(target_for_plan, gimbal.bullet_speed());
+                if (command.control && target_for_plan.has_value()) {
+                    const auto ekf_x = target_for_plan->ekf_x();
+                    const double center_yaw = std::atan2(ekf_x[2], ekf_x[0]);
+                    command.small_yaw = command.yaw;
+                    command.big_yaw = gimbal.state().big_yaw + tools::limit_rad(center_yaw - gimbal.state().big_yaw);
+                }
+            }
             command.rad2degree();
 
             gimbal.send(command);
 
             //--- 调试画图 ---
-            chain_name = "auto_aim";
             if (!armors.empty()) {
                 for (auto& armor : armors) {  // 绘制 solver 重投影后的所有目标装甲板的位置。
                     aim_solver.solve(armor);

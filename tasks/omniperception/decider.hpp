@@ -23,8 +23,9 @@ public:
 
   io::Command decide(const std::vector<DetectionResult> & detection_queue);
 
-  // 返回值单位是 degree。先解出装甲板在相机前的位置，再用 R、t 变到车体中心，
-  // 角度从车体中心指向装甲板。
+  // 返回值单位是 degree。先解出装甲板在相机前的位置，再用 R、t 变到车体中心。
+  // 坐标系与电控一致：x 朝后，y 朝右，z 朝上。yaw 为 0 表示目标在正后方。
+  // 主相机装在小 yaw 上、朝前。发给大小 yaw 的世界角 = 当前大 yaw + 这个 yaw + 180°。
   Eigen::Vector2d delta_angle(
     const std::list<auto_aim::Armor> & armors, const std::string & camera);
 

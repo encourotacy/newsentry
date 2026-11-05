@@ -164,7 +164,7 @@ Eigen::Vector2d Decider::delta_angle(
   }
 
   delta_angle[0] = std::atan2(point_body.y(), point_body.x()) * 57.3;
-  // 车体 z 向上为正。云台俯仰向下为正，所以取反，和主相机火控的符号一致。
+  // 电控系 z 向上为正。云台俯仰向下为正，所以取反，和主相机火控的符号一致。
   delta_angle[1] =
     -std::atan2(point_body.z(), std::hypot(point_body.x(), point_body.y())) * 57.3;
   return delta_angle;
