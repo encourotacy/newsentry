@@ -127,6 +127,7 @@ int main(int argc, char* argv[]) {
                     const double center_yaw = std::atan2(ekf_x[2], ekf_x[0]);
                     command.small_yaw = command.yaw;
                     command.big_yaw = gimbal.state().big_yaw + tools::limit_rad(center_yaw - gimbal.state().big_yaw);
+                    // 小 yaw 指向装甲板的中心，大 yaw 指向敌方车体的旋转中心
                 }
             }
             command.rad2degree();
@@ -238,6 +239,8 @@ int main(int argc, char* argv[]) {
 
         plotter.plot(data);
         cv::imshow("OVSentry Omni MPC Debug", img);
+        const cv::Mat omni_img = perceptron.latest_image();
+        if (!omni_img.empty()) cv::imshow("Omni Camera", omni_img);
         auto key = cv::waitKey(1);
         if (key == 'q' || key == 'Q') break;
     }

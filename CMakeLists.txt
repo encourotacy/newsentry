@@ -4,6 +4,8 @@ project(try_sp_vision)
 # 强制使用C++17标准
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# 供 clangd 在本工程内解析符号，避免沿目录向上用到其他仓库的编译数据库
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Release) # ?
 message(STATUS "--------------------CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}--------------------")
 

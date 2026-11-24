@@ -24,7 +24,7 @@ classify_model: assets/tiny_resnet.onnx
 yolo11_model_path: assets/yolo11.xml
 yolov8_model_path: assets/yolov8.xml
 yolov5_model_path: assets/yolov5_0526.xml
-device: CPU
+device: GPU
 use_traditional: false
 
 use_roi: false # 是否启用 roi，不启用则识别整张图片
@@ -79,8 +79,8 @@ decision_speed: 7 # rad/s
 fire_thresh: 0.60
 
 is_multiple_thresh: true
-planner_judge_distance: [0.90, 1.50, 1.90, 2.30, 2.80, 3.50, 4.20, 5.00, 100] # m
-planner_fire_thresh: [9.00, 4.20, 3.00, 1.90, 0.72, 0.45, 0.27, 0.13, 0.10] # degree
+planner_judge_distance: [0.90, 1.50, 3.50, 100] # m
+planner_fire_thresh: [9.00, 4.20, 0.45, 0.10] # degree
   # 若距离大于judge_distance_for_planner的最后一位，则使用最后一位的阈值
 
 high_spin_force_enabled_planner: true

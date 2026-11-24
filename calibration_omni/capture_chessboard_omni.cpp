@@ -79,6 +79,10 @@ int main(int argc, char * argv[]) {
 
     while (true) {
         camera.read(image, timestamp);
+        // 全向镜头装反，标定前把画面转正。保存下去的照片已经是转正后的，计算内参时不要再转。
+        cv::Mat upright;
+        cv::rotate(image, upright, cv::ROTATE_180);
+        image = upright;
         frame_id++;
         if (frame_id % detect_interval == 0 || corners.empty()) {
             found = detect_chessboard(image, pattern_size, corners, preview_scale);

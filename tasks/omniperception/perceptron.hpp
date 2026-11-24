@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <opencv2/opencv.hpp>
 #include <string>
 #include <thread>
 #include <vector>
@@ -26,6 +27,9 @@ public:
 
   std::vector<DetectionResult> get_detection_queue();
 
+  // 转正后的最新全向画面。没有新帧时返回空图。
+  cv::Mat latest_image() const;
+
 private:
   struct OmniCamera
   {
@@ -40,6 +44,8 @@ private:
   std::vector<std::thread> threads_;
   tools::ThreadSafeQueue<DetectionResult, true> detection_queue_;
   Decider decider_;
+  cv::Mat latest_image_;
+  mutable std::mutex image_mutex_;
   bool stop_flag_;
   mutable std::mutex mutex_;
   std::condition_variable condition_;
