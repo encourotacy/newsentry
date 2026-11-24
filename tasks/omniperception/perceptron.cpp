@@ -90,10 +90,6 @@ void Perceptron::parallel_infer(OmniCamera & cam)
       cv::Mat img;
       std::chrono::steady_clock::time_point timestamp;
       if (!cam.camera->try_read(img, timestamp, 30) || img.empty()) continue;
-      // 全向镜头装反，识别前把画面转正。主相机不经过这里。
-      cv::Mat upright;
-      cv::rotate(img, upright, cv::ROTATE_180);
-      img = upright;
       {
         std::lock_guard<std::mutex> lock(image_mutex_);
         latest_image_ = img.clone();

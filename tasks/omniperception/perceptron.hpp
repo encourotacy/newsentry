@@ -27,7 +27,7 @@ public:
 
   std::vector<DetectionResult> get_detection_queue();
 
-  // 转正后的最新全向画面。没有新帧时返回空图。
+  // 最新全向画面。没有新帧时返回空图。
   cv::Mat latest_image() const;
 
 private:
