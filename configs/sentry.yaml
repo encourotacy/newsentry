@@ -39,7 +39,7 @@ camera_name: "hikrobot"
 exposure_ms: 1.8  # 曝光时间，s
 gain: 14          # 增益，范围 [0,16.9]
 vid_pid: "2bdf:0001"
-serial: ""        # 多台海康同时接入时填写主相机序列号；留空则打开枚举到的第一台
+serial: "DA2819665"        # 多台海康同时接入时填写主相机序列号；留空则打开枚举到的第一台
 
 R_gimbal2imubody: [1, 0, 0, 0, 1, 0,  0, 0, 1]
 
