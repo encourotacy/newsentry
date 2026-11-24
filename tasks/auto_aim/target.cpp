@@ -71,7 +71,7 @@ Target::Target(const Armor& armor, std::chrono::steady_clock::time_point t, doub
 
 //=== 主程序 ===
 void Target::predict(std::chrono::steady_clock::time_point t) {
-    auto dt = tools::delta_time(t, t_);
+    auto dt = tools::delta_time(t_, t);
     predict(dt);
     t_ = t;
 }
