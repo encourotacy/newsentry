@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     io::StateSubscriber gimbal_mode(config_path);
     io::Camera camera(config_path);      // 相机，读取相机画面
 
-    auto_aim::YOLO yolo(config_path, true);
+    auto_aim::YOLO yolo(config_path, false);
     auto_aim::Solver aim_solver(config_path);
     auto_aim::Tracker tracker(config_path, aim_solver);
     auto_aim::Planner planner(config_path);
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
                     aim_solver.solve(armor);
                     auto image_points = aim_solver.reproject_armor(
                         armor.xyz_in_world_, armor.ypr_in_world_[0], armor.name_);
-                    tools::draw_points(img, image_points, {255, 0, 0});  // 显示为蓝色
+                    tools::draw_points(img, image_points, {0, 255, 0});  // 显示为绿色
                 }
 
                 // data["armor_num"] = armors.size();
@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
                     Eigen::Vector4d aim_xyza = planner.aim_xyza;
                     auto image_points =
                         aim_solver.reproject_armor(aim_xyza.head(3), aim_xyza[3], target.name);
-                    tools::draw_points(img, image_points, {0, 0, 255});  // 显示为红色
+                    tools::draw_points(img, image_points, {0, 255, 0});  // 显示为绿色
                 }
 
                 // Eigen::VectorXd x = target.ekf_x();
