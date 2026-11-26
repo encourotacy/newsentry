@@ -39,7 +39,7 @@ class ExtendedKalmanFilter {
     std::deque<int> recent_nis_failures{0};
 
     bool debug_;
-    bool nis_fail_;
+    bool nis_fail_ = false;
     Eigen::MatrixXd I;  // 单位阵，用于之后的计算
     std::function<Eigen::VectorXd(const Eigen::VectorXd &, const Eigen::VectorXd &)> x_add;
     std::function<Eigen::VectorXd(const Eigen::VectorXd &, const Eigen::VectorXd &)> z_subtract;
