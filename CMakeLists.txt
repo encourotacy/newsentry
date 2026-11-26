@@ -4,8 +4,16 @@ project(try_sp_vision)
 # 强制使用C++17标准
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# 供 clangd 在本工程内解析符号，避免沿目录向上用到其他仓库的编译数据库
+# 供 clangd 在本工程内解析符号，避免沿目录向上用到其他仓库的编译数据库。
+# 文件由 cmake 写到构建目录；根目录放一个链接，clangd 才能直接看到。
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(_compile_commands_link "${CMAKE_SOURCE_DIR}/compile_commands.json")
+if(NOT EXISTS "${_compile_commands_link}")
+    file(RELATIVE_PATH _compile_commands_rel
+        "${CMAKE_SOURCE_DIR}"
+        "${CMAKE_BINARY_DIR}/compile_commands.json")
+    file(CREATE_LINK "${_compile_commands_rel}" "${_compile_commands_link}" SYMBOLIC)
+endif()
 set(CMAKE_BUILD_TYPE Release) # ?
 message(STATUS "--------------------CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}--------------------")
 

@@ -5,7 +5,6 @@
 #include <opencv2/opencv.hpp>
 #include <optional>
 #include <string>
-#include <thread>
 
 #include "io/camera.hpp"
 #include "io/command.hpp"
@@ -95,7 +94,7 @@ int main(int argc, char* argv[]) {
         if (mode == io::ROS2Mode::auto_aim) {
             //--- 自瞄模式，计算自瞄指令 ---
             auto armors = yolo.detect(img, frame_count);
-            tracker.filter(armors, cv::Point2f(img.cols / 2, img.rows / 2), armor_ignore.ignore_ids());
+            tracker.filter(armors, cv::Point2f(img.cols * 0.5f, img.rows * 0.5f), armor_ignore.ignore_ids());
 
             auto targets = tracker.track(armors, timestamp);
 

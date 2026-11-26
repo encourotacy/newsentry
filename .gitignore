@@ -3,6 +3,7 @@
 
 # 过程性文件
 build/
+compile_commands.json
 logs/
 manual_output/
 records/
