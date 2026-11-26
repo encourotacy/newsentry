@@ -237,9 +237,15 @@ int main(int argc, char* argv[]) {
         tools::draw_text(img, fmt::format("[{}]", tracker.state()), {10, 120}, {0, 255, 0});
 
         plotter.plot(data);
-        cv::imshow("OVSentry Omni MPC Debug", img);
+        cv::Mat view;
+        cv::resize(img, view, {}, 0.5, 0.5);
         const cv::Mat omni_img = perceptron.latest_image();
-        if (!omni_img.empty()) cv::imshow("Omni Camera", omni_img);
+        if (!omni_img.empty()) {
+            cv::Mat omni_view;
+            cv::resize(omni_img, omni_view, {omni_img.cols * view.rows / omni_img.rows, view.rows});
+            cv::hconcat(view, omni_view, view);
+        }
+        cv::imshow("OVSentry Omni MPC Debug", view);
         auto key = cv::waitKey(1);
         if (key == 'q' || key == 'Q') break;
     }
