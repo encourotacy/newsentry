@@ -109,9 +109,9 @@ int main(int argc, char* argv[]) {
                 command.shoot = false;
                 if (omni.control) {
                     command.pitch = 0.26;
-                    // 全向 yaw 是目标相对车尾的角。主相机朝前，在 180° 上再加 90°。
+                    // 全向 yaw 的 0° 是车尾。小云台朝前，再加 180°。
                     const double aim_yaw =
-                        tools::limit_rad(gimbal.state().big_yaw + omni.yaw + CV_PI + CV_PI / 2);
+                        tools::limit_rad(gimbal.state().big_yaw + omni.yaw + CV_PI);
                     command.yaw = aim_yaw;
                     command.big_yaw = aim_yaw;
                     command.small_yaw = aim_yaw;
