@@ -57,6 +57,8 @@ int main(int argc, char* argv[]) {
     io::MPCCommand command{};
     int frame_count = 0;
     auto last_mode = io::ROS2Mode::auto_aim;
+    bool omni_hold = false;
+    double omni_hold_yaw = 0;
 
     while (!exiter.exit()) {
         //--- 读取相机画面 ---
@@ -109,8 +111,17 @@ int main(int argc, char* argv[]) {
                     command.yaw = aim_yaw;
                     command.big_yaw = aim_yaw;
                     command.small_yaw = aim_yaw;
+                    omni_hold = true;
+                    omni_hold_yaw = aim_yaw;
+                } else if (omni_hold) {
+                    command.control = true;
+                    command.pitch = 0.26;
+                    command.yaw = omni_hold_yaw;
+                    command.big_yaw = omni_hold_yaw;
+                    command.small_yaw = omni_hold_yaw;
                 }
             } else {
+                omni_hold = false;
                 std::optional<auto_aim::Target> target_for_plan =
                     targets.empty() ? std::nullopt : std::make_optional(targets.front());
                 command = planner.plan(target_for_plan, gimbal.bullet_speed());
@@ -126,10 +137,12 @@ int main(int argc, char* argv[]) {
 
             gimbal.send(command);
         } else if (mode == io::ROS2Mode::outpost) {
+            omni_hold = false;
             gimbal.send(false, false, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0);
         } else {
+            omni_hold = false;
             gimbal.send(false, false, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0);

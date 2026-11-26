@@ -62,6 +62,8 @@ int main(int argc, char* argv[]) {
     int frame_count = 0;
     std::string chain_name = "";  // 调试画面显示用
     auto last_mode = io::ROS2Mode::auto_aim;
+    bool omni_hold = false;
+    double omni_hold_yaw = 0;
 
     while (!exiter.exit()) {
         //--- 读取相机画面 ---
@@ -115,8 +117,17 @@ int main(int argc, char* argv[]) {
                     command.yaw = aim_yaw;
                     command.big_yaw = aim_yaw;
                     command.small_yaw = aim_yaw;
+                    omni_hold = true;
+                    omni_hold_yaw = aim_yaw;
+                } else if (omni_hold) {
+                    command.control = true;
+                    command.pitch = 0.26;
+                    command.yaw = omni_hold_yaw;
+                    command.big_yaw = omni_hold_yaw;
+                    command.small_yaw = omni_hold_yaw;
                 }
             } else {
+                omni_hold = false;
                 chain_name = "auto_aim";
                 std::optional<auto_aim::Target> target_for_plan =
                     targets.empty() ? std::nullopt : std::make_optional(targets.front());
@@ -204,6 +215,7 @@ int main(int argc, char* argv[]) {
             }
 
         } else if (mode == io::ROS2Mode::outpost) {
+            omni_hold = false;
             gimbal.send(false, false, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0);
@@ -211,6 +223,7 @@ int main(int argc, char* argv[]) {
             chain_name = "outpost";
         } else {
             chain_name = "unknow";
+            omni_hold = false;
             gimbal.send(false, false, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0, 0.0, 0.0, 
                         0.0, 0.0, 0.0);
